@@ -1,0 +1,12 @@
+Package: hydroCA
+Type: Package
+Title: Hydrological modeling with cellular automata
+Version: 0.1.0
+Authors@R: person("Simon", "Brewer", email = "simon.brewer@geog.utah.edu",
+                  role = c("aut", "cre"))
+Description: Functions for hydrological modeling based on cellular automata.
+    Contains version of the weighted cellular automata model designed by Guidolin et al (2015).
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
