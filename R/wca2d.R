@@ -5,6 +5,8 @@
 #' The parameter \code{vcheck} is used to update the time step.
 #' The new value for dt is returned as \code{newdt}
 #'
+#' Updated 2018-04-16 to output in and out flows
+#'
 #' @param dem A matrix with elevation values in each cell (m)
 #' @param ppt A matrix with precipitation values in each cell (mm)
 #' @param wse A matrix with the water surface elevation values from the previous iteration(m)
@@ -26,6 +28,7 @@ wca2d_1t <- function(dem, ppt, wse,
                    m = as.integer(gridx), n = as.integer(gridy),
                    dem = as.double(dem), ppt = as.double(ppt),
                    wse = as.double(wse),
+                   otot = as.double(dem), itot = as.double(dem),
                    dt = as.double(deltat), dtu = as.double(deltatu),
                    currt = as.double(currt), nullcell = as.double(nullval),
                    mannn = as.double(mannN), cellx = as.double(cellem),

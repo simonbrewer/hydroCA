@@ -53,7 +53,8 @@
 
       end
 
-      subroutine wca2d_1t( m, n, dem, ppt, wse, dt, dtu,
+      subroutine wca2d_1t( m, n, dem, ppt, wse, otot, itot,
+     >                     dt, dtu,
      >                     currt, nullcell,
      >                     mannn, cellx, cellem, cella, 
      >                     vcheck, newdt, vamax)
