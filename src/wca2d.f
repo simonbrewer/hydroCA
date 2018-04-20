@@ -4,6 +4,12 @@
 ! Guidolin et al. (2016). A weighted cellular automata 2D inundation model 
 ! for rapid flood analysis Env. Mod. Soft., 84, 378-394
 !
+! Ver. 0.5 Removed version number from file name
+!          Made some changes to the velocity routine 
+!          calculation of alpha now includes hydraulic radius
+!
+! Ver. 0.4 Add subroutines for variable 
+!
 ! Ver. 0.3 Add subroutines for variable time step updating
 !          TBD
 !      
@@ -217,6 +223,7 @@
 
         !write(*,*) "im",im
 
+        ! Total volume to leave cell (m3, eqn. 11)
         itotdt = min( d0*cella, 
      >              im/maxval(wi), 
      >              dVmin + otot(i,j) ) 
@@ -225,10 +232,12 @@
         !write(*,*) "im/maxwi",im/maxval(wi)
         !write(*,*) "dvmin+otot",dVmin+otot(j,k) 
         !write(*,*) i,j,"itotdt",itotdt
+        ! Copy outflow value to otot (could really just store this as
+        ! otot)
 
         otot(i,j) = itotdt
 
-        ! Calculate flow to all neighboring cells (eqn. 12)
+        ! Calculate flow into all neighboring cells (eqn. 12)
         do 41 k=1,4
         fluxes(i,j,k) = itotdt * wi(k)
         itot((i+offx(k)),(j+offy(k))) = itot((i+offx(k)),(j+offy(k))) +
@@ -251,6 +260,7 @@
 
       !-------------------------------------------------------------------------
       ! Subroutine to update water levels
+      ! This is equation 13 from Guidolin et al
       subroutine update_depth( m, n, ppt, wse, itot, otot, dt, cella )
 
       !-------------------------------------------------------------------------
@@ -283,6 +293,8 @@
 
       !-------------------------------------------------------------------------
       ! Subroutine to calculate velocity
+      ! Most of this was taken from the CADDIES code
+      ! in velocityDiffusive.ca
       subroutine velocity( m, n, dem, wse, itot, fluxes, dt,
      >                     sarray, aarray, dtarray, 
      >                     cellx, cellem, cella, nullcell, mannn )
@@ -315,8 +327,8 @@
       double precision hr ! Hydraulic radius (m)
       double precision sg ! Hydraulic gradient (-)
       double precision ndem,nwse
-      double precision tolwd
-      double precision tolslope
+      double precision tolwd ! Minimum water depth for flow to occur
+      double precision tolslope ! Minimum slope for flow to occur
       double precision wdmain ! Water depth of central cell
       double precision nwd ! Water depth of neighbor cell
       double precision pi ! 3.1415...
@@ -332,15 +344,12 @@
       angle(4) = 3.0*pi/2.0
       offx = (/0,+1,0,-1/) ! Offsets for von Neumann neighborhood
       offy = (/+1,0,-1,0/)
-      !write(*,*) offx
-      !write(*,*) offy
-      !write(*,*) angle
-      !write(*,*) angle/pi*180
 
+      prevdt = dt ! Keep previous dt value (delete?)
       sarray(:,:) = 0.0 ! Initialize speed array
       aarray(:,:) = 0.0 ! Initialize angle array
       dtarray(:,:) = 1000.0 ! Initialize possible dt array
-      !possdt = 1000.0
+
       ! Loop through cells
       do 10 i=2,(m-1)
       
@@ -349,7 +358,6 @@
       x = 0.0 ! Set vector coordinates to zero
       y = 0.0 ! Set vector coordinates to zero 
       alpha = 1000.0 ! Alpha set to large value
-      prevdt = dt ! Keep previous dt value (delete?)
       wdmain = wse(i,j) - dem(i,j)
 
       ! Loop through neighbors
@@ -357,14 +365,12 @@
       d0 = 0.0 ! Set difference in depths to zero
       vh = 0.0 ! Set default velocity to zero
 
-      ! Check for border cells
+      ! Get values for neighboring cell
       ndem = dem((i+offx(k)),(j+offy(k))) 
       nwse = wse((i+offx(k)),(j+offy(k))) 
       nwd = nwse - ndem
 
-      !write(*,*) wse(i,j),nwse
-      !write(*,*) dem(i,j),ndem
-      
+      ! Check for border cells
       if (ndem.eq.nullcell) then
         dwse = -1.0e6
         hr = 0.0
@@ -377,31 +383,27 @@
         ! Manning and critical velocity
         sg = dwse / cellx ! Hydraulic gradient (S)
         vh = fluxes(i,j,k) / (wdmain * cellem * prevdt) 
-        if (sg.gt.topslope) then
+        if (sg.gt.tolslope) then
           !write(*,*) "Updating DT",dwse,hr
           !write(*,*) "Updating DT",sg,vh
           !write(*,*) "Updating DT",mannn,hr**(5.0/3.0),sqrt(sg),
         !>                 ((2*mannn) / (dwse**(5.0/3.0))) *
-        !>                 sqrt(sg) 
-          alpha = min( alpha, ((2*mannn) / (dwse**(5.0/3.0))) *
+        !>                 sqrt(sg)
+          ! Equation 17 (modified Manning's av. velocity) 
+          alpha = min( alpha, ((2*mannn) / (hr**(5.0/3.0))) *
      >                 sqrt(sg) )
         endif
-        x = x + vh * cos(angle(k))
-        y = y + vh * sin(angle(k))
+        x = x + vh * cos(angle(k)) ! eqn. 15
+        y = y + vh * sin(angle(k)) ! eqn. 15
       endif
       
-      !write(*,*) dwse,hr,sg,vh
-      !write(*,*) i,j,"alpha",alpha
-      !dwse = max( wse(i,j) , wse((i+offx(k)),(j+offy(k))) )
-
-
 30    continue
       ! If there is some velocity
       if (abs(x).gt.0.0001 .or. abs(y).gt.0.0001) then
-        sarray(i,j) = sqrt(x**2 + y**2)
-        aarray(i,j) = atan2(y,x)
+        sarray(i,j) = sqrt(x**2 + y**2) ! eqn. 16
+        aarray(i,j) = atan2(y,x) ! eqn. 16
       endif
-      ! Calculate possible new dt
+      ! Calculate possible new dt (eqn. 17)
       dtarray(i,j)= min( dtarray(i,j), (cella / 4) * alpha)
       !possdt = min( possdt, (cella / 4) * alpha)
       !write(*,*) prevdt,dt,alpha
