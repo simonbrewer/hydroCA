@@ -37,7 +37,8 @@ wca2d_1t <- function(dem, ppt, wse,
                    mannn = as.double(mannN), cellx = as.double(cellem),
                    cellem = as.double(cellem), cella = as.double(cellem*cellem),
                    vcheck = as.integer(vcheck),
-                   newdt = as.double(0), vamax = as.double(0))
+                   newdt = as.double(0), vamax = as.double(0),
+                   tolwd = as.double(tolwd), tolslope = as.double(tolslope))
   return(simcf)
 
 }
