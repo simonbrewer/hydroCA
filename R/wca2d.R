@@ -17,13 +17,16 @@
 #' @param mannN Manning's coefficent
 #' @param cellem The cell dimensions (m). Note that this currently assumes a constant and regular grid
 #' @param vcheck Run velocity check?
+#' @param tolwd Water depth tolerance (m)
+#' @param tolslope Slope tolerance (%)
 #' @return \code{simcf}: a list of output from the Fortran routine
 #' @examples
 #' wca2d_1t(dem, ppt, wse, 1, 60, 0)
 wca2d_1t <- function(dem, ppt, wse,
                      deltat, deltatu, currt,
                      nullvall=1e6, mannN=0.05,
-                     cellem=50, vcheck=0) {
+                     cellem=50, vcheck=0,
+                     tolwd=0.0001, tolslope=0.1) {
   simcf = .Fortran("wca2d_1t",
                    m = as.integer(gridx), n = as.integer(gridy),
                    dem = as.double(dem), ppt = as.double(ppt),

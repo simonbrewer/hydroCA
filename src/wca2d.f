@@ -63,7 +63,8 @@
      >                     dt, dtu,
      >                     currt, nullcell,
      >                     mannn, cellx, cellem, cella, 
-     >                     vcheck, newdt, vamax)
+     >                     vcheck, newdt, vamax,
+     >                     tolwd, tolslope)
       !-------------------------------------------------------------------------
       ! Input variables
       integer m,n ! Grid sizes
@@ -77,6 +78,8 @@
       double precision cellx ! Distance between cell centers (HC)
       double precision cellem ! Cell edge length (HC)
       double precision cella ! Cell area (HC)
+      double precision tolwd ! Minimum water depth for flow to occur
+      double precision tolslope ! Minimum slope for flow to occur
       integer vcheck ! Number of iterations
 
       ! Output variables
@@ -106,7 +109,8 @@
       !write(*,*) currt, "Velocity check"
       call velocity ( m, n, dem, wse, itot, fluxes, dt,
      >                sarray, aarray, dtarray, 
-     >                cellx, cellem, cella, nullcell, mannn )
+     >                cellx, cellem, cella, nullcell, 
+     >                mannn, tolwd, tolslope )
       newdt = minval(dtarray)
       vamax = maxval(sarray)
 
@@ -297,7 +301,8 @@
       ! in velocityDiffusive.ca
       subroutine velocity( m, n, dem, wse, itot, fluxes, dt,
      >                     sarray, aarray, dtarray, 
-     >                     cellx, cellem, cella, nullcell, mannn )
+     >                     cellx, cellem, cella, nullcell, 
+     >                     mannn, tolwd, tolslope )
 
       !-------------------------------------------------------------------------
       ! Input variables
@@ -335,7 +340,7 @@
       double precision angle(4) ! Angle betw. cell and neighbors (radians)
       integer offx(4),offy(4)
 
-      parameter(tolwd = 1e-4,tolslope = 1e-4)
+      !parameter(tolwd = 1e-4,tolslope = 1e-4)
       parameter(pi = 4.0*atan(1.0))
       !angle = (/0.0, pi/2.0, pi, 3.0*pi/2.0/)
       angle(1) = 0.0
